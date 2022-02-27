@@ -30,8 +30,8 @@ class JPushPlugin : FlutterPlugin, MethodCallHandler {
         var hasOnReceiveMessage = false
         var hasOnOpenNotification = false
         var hasOnReceiveNotification = false
+        var tag = ""
     }
-
 
     override fun onAttachedToEngine(plugin: FlutterPluginBinding) {
         channel = MethodChannel(plugin.binaryMessenger, "fl_jpush")
@@ -52,6 +52,7 @@ class JPushPlugin : FlutterPlugin, MethodCallHandler {
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         channelResult = result
+        tag = call.method
         when (call.method) {
             "setup" -> {
                 val map = call.arguments<HashMap<String, Any>>()
@@ -275,8 +276,11 @@ class JPushPlugin : FlutterPlugin, MethodCallHandler {
             res["code"] = jPushMessage?.errorCode
             if (jPushMessage?.tags != null) res["tags"] =
                 jPushMessage.tags.toList()
-            handle.post {
-                channelResult?.success(res)
+            if (channelResult != null) {
+                handle.post {
+                    channelResult?.success(res)
+                    channelResult = null
+                }
             }
         }
 
@@ -290,8 +294,11 @@ class JPushPlugin : FlutterPlugin, MethodCallHandler {
             res["isBind"] = jPushMessage?.tagCheckStateResult
             if (jPushMessage?.tags != null) res["tags"] =
                 jPushMessage.tags.toList()
-            handle.post {
-                channelResult?.success(res)
+            if (channelResult != null) {
+                handle.post {
+                    channelResult?.success(res)
+                    channelResult = null
+                }
             }
         }
 
@@ -304,8 +311,12 @@ class JPushPlugin : FlutterPlugin, MethodCallHandler {
             val res: MutableMap<String, Any?> = HashMap()
             res["alias"] = jPushMessage?.alias
             res["code"] = jPushMessage?.errorCode
-            handle.post {
-                channelResult?.success(res)
+            // println("tag=${tag}   alias=${jPushMessage?.alias}-code=${jPushMessage?.errorCode}")
+            if (channelResult != null) {
+                handle.post {
+                    channelResult?.success(res)
+                    channelResult = null
+                }
             }
         }
     }
